@@ -95,10 +95,12 @@ private:
   // track MVA
   const std::string trackQuality_;
   const bool doPUCorrection_;
+  const bool doNvtxCorrection_;
   const bool doTrackCorrection_;
   const bool isMC_;
   const bool haveAllHistograms_;
   const std::string puScaleFactorFile_;
+  const std::string nvtxScaleFactorFile_;
   const std::string trackScaleFactorFile_;
   const std::vector<std::string> mvaProducers_;
   const edm::InputTag mvaTrackTag_;
@@ -460,10 +462,12 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
       jetsToken_(consumes<std::vector<reco::PFJet> >(jetsTag_)),
       trackQuality_(ps.getUntrackedParameter<std::string>("trackQuality", "highPurity")),
       doPUCorrection_(ps.getUntrackedParameter<bool>("doPUCorrection", false)),
+      doNvtxCorrection_(ps.getUntrackedParameter<bool>("doNvtxCorrection", false)),
       doTrackCorrection_(ps.getUntrackedParameter<bool>("doTrackCorrection", false)),
       isMC_(ps.getUntrackedParameter<bool>("isMC", false)),
       haveAllHistograms_(ps.getUntrackedParameter<bool>("haveAllHistograms", false)),
       puScaleFactorFile_(ps.getUntrackedParameter<std::string>("puScaleFactorFile", "PileupScaleFactor.root")),
+      nvtxScaleFactorFile_(ps.getUntrackedParameter<std::string>("nvtxScaleFactorFile", "PileupScaleFactor.root")),
       trackScaleFactorFile_(ps.getUntrackedParameter<std::string>("trackScaleFactorFile", "PileupScaleFactor.root")),
       mvaProducers_(ps.getUntrackedParameter<std::vector<std::string> >("MVAProducers")),
       mvaTrackTag_(ps.getUntrackedParameter<edm::InputTag>("TrackProducerForMVA")),
@@ -626,14 +630,25 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
 
   // Read pileup weight factors
 
-  if (isMC_ && doPUCorrection_ && doTrackCorrection_) {
-    throw std::runtime_error("if isMC is true, only one of doPUCorrection and doTrackCorrection can be true");
+  if (isMC_ && ((doPUCorrection_ && !doNvtxCorrection_ && !doTrackCorrection_) || 
+                (!doPUCorrection_ && doNvtxCorrection_ && !doTrackCorrection_) || 
+                (!doPUCorrection_ && !doNvtxCorrection_ && doTrackCorrection_))) {
+    throw std::runtime_error("if isMC is true, only one of doPUCorrection, doNvtxCorrection and doTrackCorrection can be true");
   }
 
   if (isMC_ && doPUCorrection_) {
     vpu_.clear();
     TFile* f1 = TFile::Open(puScaleFactorFile_.c_str());
     TH1F* h1 = dynamic_cast<TH1F*>(f1->Get("pileupweight"));
+    for (int i = 1; i <= h1->GetNbinsX(); ++i)
+      vpu_.push_back(h1->GetBinContent(i));
+    f1->Close();
+  }
+
+  if (isMC_ && doNvtxCorrection_) {
+    vpu_.clear();
+    TFile* f1 = TFile::Open(nvtxScaleFactorFile_.c_str());
+    TH1F* h1 = dynamic_cast<TH1F*>(f1->Get("nvertexweight"));
     for (int i = 1; i <= h1->GetNbinsX(); ++i)
       vpu_.push_back(h1->GetBinContent(i));
     f1->Close();
@@ -1470,6 +1485,12 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
           if (trueNIntH_)
             trueNIntH_->Fill(ntrueInt);
           if (doPUCorrection_) {
+            if (ntrueInt > -1 && nVertex < int(vpu_.size()))
+              wfac = vpu_.at(ntrueInt);
+            else
+              wfac = 0.0;
+          }
+          if (doNvtxCorrection_) {
             if (nVertex > -1 && nVertex < int(vpu_.size()))
               wfac = vpu_.at(nVertex);
             else
