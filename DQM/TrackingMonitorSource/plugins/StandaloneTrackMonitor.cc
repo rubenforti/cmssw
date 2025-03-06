@@ -401,10 +401,12 @@ void StandaloneTrackMonitor::fillDescriptions(edm::ConfigurationDescriptions& de
 
   desc.addUntracked<std::string>("trackQuality", "highPurity");
   desc.addUntracked<bool>("doPUCorrection", false);
+  desc.addUntracked<bool>("doNvtxCorrection", false);
   desc.addUntracked<bool>("doTrackCorrection", false);
   desc.addUntracked<bool>("isMC", false);
   desc.addUntracked<bool>("haveAllHistograms", false);
   desc.addUntracked<std::string>("puScaleFactorFile", "PileupScaleFactor.root");
+  desc.addUntracked<std::string>("nvtxScaleFactorFile", "PileupScaleFactor.root");
   desc.addUntracked<std::string>("trackScaleFactorFile", "PileupScaleFactor.root");
   desc.addUntracked<std::vector<std::string> >("MVAProducers");
   desc.addUntracked<edm::InputTag>("TrackProducerForMVA");
@@ -630,9 +632,9 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
 
   // Read pileup weight factors
 
-  if (isMC_ && ((doPUCorrection_ && !doNvtxCorrection_ && !doTrackCorrection_) || 
-                (!doPUCorrection_ && doNvtxCorrection_ && !doTrackCorrection_) || 
-                (!doPUCorrection_ && !doNvtxCorrection_ && doTrackCorrection_))) {
+  if (isMC_ && ((doPUCorrection_ && doNvtxCorrection_) || 
+                (doPUCorrection_ && doTrackCorrection_) || 
+                (doNvtxCorrection_ && doTrackCorrection_))) {
     throw std::runtime_error("if isMC is true, only one of doPUCorrection, doNvtxCorrection and doTrackCorrection can be true");
   }
 
