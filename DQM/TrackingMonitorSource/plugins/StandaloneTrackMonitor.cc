@@ -1485,7 +1485,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
           if (trueNIntH_)
             trueNIntH_->Fill(ntrueInt);
           if (doPUCorrection_) {
-            if (ntrueInt > -1 && nVertex < int(vpu_.size()))
+            if (ntrueInt > -1 && ntrueInt < int(vpu_.size()))
               wfac = vpu_.at(ntrueInt);
             else
               wfac = 0.0;
