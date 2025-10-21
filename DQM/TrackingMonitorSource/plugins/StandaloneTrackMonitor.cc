@@ -962,7 +962,7 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
   nHitsTECSVsEtaH_ = ibook.bookProfile("nHitsTECSVsEta",
                                        "Number of Hits in TEC Vs Eta (Single-sided)",
                                        TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
-                                       TrackEtaHistvertexZposerrBSH_oPar_.getParameter<double>("Xmin"),
+                                       TrackEtaHistoPar_.getParameter<double>("Xmin"),
                                        TrackEtaHistoPar_.getParameter<double>("Xmax"),
                                        0.0,
                                        0.0,
@@ -2004,9 +2004,6 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
       double vtx_chi2norm = vertex.normalizedChi2();
       double vtx_chi2prob = TMath::Prob(vtx_chi2, (int)vtx_ndof);
 
-      vertexXH_->Fill(vx, wfac);
-      vertexYH_->Fill(vy, wfac);
-      vertexZH_->Fill(vz, wfac);
       vertexChi2H_->Fill(vtx_chi2, wfac);
       vertexChi2oNDFH_->Fill(vtx_chi2norm, wfac);
       vertexChi2ProbH_->Fill(vtx_chi2prob, wfac);
@@ -2018,8 +2015,8 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
         double deltaX = vertex.x() - beamspotvertex.x();
         double deltaY = vertex.y() - beamspotvertex.y();
 
-        double vtx_dxy = TMath::sqrt(deltaX * deltaX + deltaY * deltaY);  // vertex transverse distance from beamspot position
-        double vtx_dxyError = TMath::sqrt(
+        double vtx_dxy = TMath::Sqrt(deltaX * deltaX + deltaY * deltaY);  // vertex transverse distance from beamspot position
+        double vtx_dxyError = TMath::Sqrt(
           (deltaX*deltaX*vertex.xError()*vertex.xError()) +
           (deltaY*deltaY*vertex.yError()*vertex.yError()) +
           (2*deltaX*deltaY*vertex.covariance(0,1))) / vtx_dxy;
@@ -2035,11 +2032,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
       else {
         edm::LogError("StandaloneTrackMonitor") << "Beamspot for input tag: " << bsTag_ << " not found!!";
       }
-
-
-
-    
-
+    }
   }
 
   if (haveAllHistograms_) {
