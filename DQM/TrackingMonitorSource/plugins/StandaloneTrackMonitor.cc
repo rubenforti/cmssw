@@ -243,9 +243,9 @@ private:
   MonitorElement* vertexYposH_;
   MonitorElement* vertexZposH_;
   MonitorElement* vertexXYposBSH_;
-  MonitorElement* vertexXYposBSErrH_;
+  MonitorElement* vertexXYposerrBSH_;
   MonitorElement* vertexZposBSH_;
-  MonitorElement* vertexZposBSErrH_;
+  MonitorElement* vertexZposerrBSH_;
   MonitorElement* vertexChi2H_;
   MonitorElement* vertexChi2oNDFH_;
   MonitorElement* vertexChi2ProbH_;
@@ -529,6 +529,15 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
   vertexXposH_ = nullptr;
   vertexYposH_ = nullptr;
   vertexZposH_ = nullptr;
+
+  nGoodVtxH_ = nullptr;
+  vertexXYposBSH_ = nullptr;
+  vertexXYposerrBSH_ = nullptr;
+  vertexZposBSH_ = nullptr;
+  vertexZposerrBSH_ = nullptr;
+  vertexChi2H_ = nullptr;
+  vertexChi2oNDFH_ = nullptr;
+  vertexChi2ProbH_ = nullptr;
 
   nPixBarrelH_ = nullptr;
   nPixEndcapH_ = nullptr;
@@ -953,7 +962,7 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
   nHitsTECSVsEtaH_ = ibook.bookProfile("nHitsTECSVsEta",
                                        "Number of Hits in TEC Vs Eta (Single-sided)",
                                        TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
-                                       TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                       TrackEtaHistvertexZposerrBSH_oPar_.getParameter<double>("Xmin"),
                                        TrackEtaHistoPar_.getParameter<double>("Xmax"),
                                        0.0,
                                        0.0,
@@ -2019,9 +2028,9 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
         double vtx_dzError = vertex.zError();
 
         vertexXYposBSH_->Fill(vtx_dxy, wfac);
-        vertexXYposBSErrH_->Fill(vtx_dxyError, wfac);
+        vertexXYposerrBSH_->Fill(vtx_dxyError, wfac);
         vertexZposBSH_->Fill(vtx_dz, wfac);
-        vertexZposBSErrH_->Fill(vtx_dzError, wfac);
+        vertexZposerrBSH_->Fill(vtx_dzError, wfac);
       }
       else {
         edm::LogError("StandaloneTrackMonitor") << "Beamspot for input tag: " << bsTag_ << " not found!!";
