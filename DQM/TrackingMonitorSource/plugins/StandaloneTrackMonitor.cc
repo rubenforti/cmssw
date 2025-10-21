@@ -144,6 +144,11 @@ private:
   MonitorElement* trackorigalgoH_;
   MonitorElement* trackStoppingSourceH_;
 
+  MonitorElement* trackXposReferenceH_;
+  MonitorElement* trackYposReferenceH_;
+  MonitorElement* trackZposReferenceH_;
+
+
   MonitorElement* DistanceOfClosestApproachToPVH_;
   MonitorElement* DistanceOfClosestApproachToPVZoomedH_;
   MonitorElement* DistanceOfClosestApproachToPVto10cmH_;
@@ -526,11 +531,15 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
   tracknDOFH_ = nullptr;
   trackd0H_ = nullptr;
   trackChi2bynDOFH_ = nullptr;
+
+  trackXposReferenceH_ = nullptr;
+  trackYposReferenceH_ = nullptr;
+  trackZposReferenceH_ = nullptr;
+
+  nGoodVtxH_ = nullptr;
   vertexXposH_ = nullptr;
   vertexYposH_ = nullptr;
   vertexZposH_ = nullptr;
-
-  nGoodVtxH_ = nullptr;
   vertexXYposBSH_ = nullptr;
   vertexXYposerrBSH_ = nullptr;
   vertexZposBSH_ = nullptr;
@@ -720,7 +729,7 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     trackqOverperrH_ = ibook.book1DD("trackqOverperr", "q Over p Error", 50, 0.0, 0.5);
     trackChargeH_ = ibook.book1DD("trackCharge", "Track Charge", 3, -1.5, 1.5);
     trackChi2H_ = ibook.book1DD("trackChi2", "Chi2", 100, 0.0, 100.0);
-    tracknDOFH_ = ibook.book1DD("tracknDOF", "nDOF", 100, 0.0, 100.0);
+    tracknDOFH_ = ibook.book1DD("tracknDOF", "nDOF", 101, -0.5, 100.5);
     trackChi2ProbH_ = ibook.book1DD("trackChi2Prob", "Chi2prob", 50, 0.0, 1.0);
     trackChi2oNDFH_ = ibook.book1DD("trackChi2oNDF", "Chi2oNDF", 100, 0.0, 100.0);
     trackd0H_ = ibook.book1DD("trackd0", "Track d0", 100, -1, 1);
@@ -734,6 +743,10 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     }
 
     trackStoppingSourceH_ = ibook.book1DD("trackstoppingsource", "Track Stopping Source", 12, 0.0, 12.0);
+
+    trackXposReferenceH_ = ibook.book1DD("trackXposReference", "Track X position at reference point", 100, -0.1, 0.1);
+    trackYposReferenceH_ = ibook.book1DD("trackYposReference", "Track Y position at reference point", 100, -0.1, 0.1);
+    trackZposReferenceH_ = ibook.book1DD("trackZposReference", "Track Z position at reference point", 100, -20.0, 20.0);
 
     // DataFormats/TrackCandidate/interface/TrajectoryStopReasons.h
     size_t StopReasonNameSize = static_cast<size_t>(StopReason::SIZE);
@@ -862,16 +875,16 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     nGoodVtxH_ = ibook.book1DD("nGoodVtx", "Number of good vertices", 120, -0.5, 119.5);
 
     vertexXposH_ = ibook.book1DD("vertexXpos", "Vertex X position", 100, -0.1, 0.1);
-    vertexYposH_ = ibook.book1DD("vertexYpos", "Vertex Y position", 200, -0.1, 0.1);
+    vertexYposH_ = ibook.book1DD("vertexYpos", "Vertex Y position", 100, -0.1, 0.1);
     vertexZposH_ = ibook.book1DD("vertexZpos", "Vertex Z position", 100, -20.0, 20.0);
 
-    vertexXYposBSH_ = ibook.book1DD("vertexXYposBS", "Vertex XY position w.r.t beam spot", 100, 0.0, 1.0);
+    vertexXYposBSH_ = ibook.book1DD("vertexXYposBS", "Vertex XY position w.r.t beam spot", 100, 0.0, 0.25);
     vertexXYposerrBSH_ = ibook.book1DD("vertexXYposerrBS", "Vertex XY position error w.r.t beam spot", 50, 0.0, 0.25);
     vertexZposBSH_ = ibook.book1DD("vertexZposBS", "Vertex Z position w.r.t beam spot", 100, -20.0, 20.0);
     vertexZposerrBSH_ = ibook.book1DD("vertexZposerrBS", "Vertex Z position error w.r.t beam spot", 50, 0.0, 0.25);
     
-    vertexChi2H_ = ibook.book1DD("vertexChi2", "Vertex chi2", 100, 0.0, 10.0);
-    vertexChi2oNDFH_ = ibook.book1DD("vertexChi2oNDF", "Vertex chi2/ndof", 100, 0.0, 10.0);
+    vertexChi2H_ = ibook.book1DD("vertexChi2", "Vertex chi2", 100, 0.0, 50.0);
+    vertexChi2oNDFH_ = ibook.book1DD("vertexChi2oNDF", "Vertex chi2/ndof", 100, 0.0, 5.0);
     vertexChi2ProbH_ = ibook.book1DD("vertexChi2Prob", "Vertex chi2 probability", 50, 0.0, 1.0);
 
 
@@ -1846,9 +1859,9 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
         beamSpotZposH_->Fill(dz, wfac);
         beamSpotZposerrH_->Fill(dzError, wfac);
 
-        vertexXposH_->Fill(vx, wfac);
-        vertexYposH_->Fill(vy, wfac);
-        vertexZposH_->Fill(vz, wfac);
+        trackXposReferenceH_->Fill(vx, wfac);
+        trackYposReferenceH_->Fill(vy, wfac);
+        trackZposReferenceH_->Fill(vz, wfac);
 
         int nPixBarrel = 0, nPixEndcap = 0, nStripTIB = 0, nStripTOB = 0, nStripTEC = 0, nStripTID = 0;
         if (isRECO_) {
@@ -1994,11 +2007,14 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
 
       if (!vertex.isValid())
         continue;
-      ++nGoodVertices;
 
-      double vx = vertex.x();
-      double vy = vertex.y();
-      double vz = vertex.z();
+      if (!vertex.isFake() && vertex.ndof()>=4)
+        ++nGoodVertices;
+
+      
+      double vtx_x = vertex.x();
+      double vtx_y = vertex.y();
+      double vtx_z = vertex.z();
       double vtx_chi2 = vertex.chi2();
       double vtx_ndof = vertex.ndof();
       double vtx_chi2norm = vertex.normalizedChi2();
@@ -2012,8 +2028,8 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
 
         reco::Vertex beamspotvertex((*beamSpot).position(), (*beamSpot).covariance3D());
 
-        double deltaX = vertex.x() - beamspotvertex.x();
-        double deltaY = vertex.y() - beamspotvertex.y();
+        double deltaX = vtx_x - beamspotvertex.x();
+        double deltaY = vtx_y - beamspotvertex.y();
 
         double vtx_dxy = TMath::Sqrt(deltaX * deltaX + deltaY * deltaY);  // vertex transverse distance from beamspot position
         double vtx_dxyError = TMath::Sqrt(
@@ -2021,9 +2037,12 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
           (deltaY*deltaY*vertex.yError()*vertex.yError()) +
           (2*deltaX*deltaY*vertex.covariance(0,1))) / vtx_dxy;
 
-        double vtx_dz = vertex.z() - beamspotvertex.z();
+        double vtx_dz = vtx_z - beamspotvertex.z();
         double vtx_dzError = vertex.zError();
-
+        
+        vertexXposH_->Fill(vtx_x, wfac);
+        vertexYposH_->Fill(vtx_y, wfac);
+        vertexZposH_->Fill(vtx_z, wfac);
         vertexXYposBSH_->Fill(vtx_dxy, wfac);
         vertexXYposerrBSH_->Fill(vtx_dxyError, wfac);
         vertexZposBSH_->Fill(vtx_dz, wfac);
