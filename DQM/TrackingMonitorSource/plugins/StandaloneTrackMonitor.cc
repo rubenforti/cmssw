@@ -235,11 +235,20 @@ private:
   MonitorElement* beamSpotZposH_;
   MonitorElement* beamSpotZposerrH_;
 
+  // Vertices
+  MonitorElement* nVertexH_;
+  MonitorElement* nVtxH_;
+  MonitorElement* nGoodVtxH_;
   MonitorElement* vertexXposH_;
   MonitorElement* vertexYposH_;
   MonitorElement* vertexZposH_;
-  MonitorElement* nVertexH_;
-  MonitorElement* nVtxH_;
+  MonitorElement* vertexXYposBSH_;
+  MonitorElement* vertexXYposBSErrH_;
+  MonitorElement* vertexZposBSH_;
+  MonitorElement* vertexZposBSErrH_;
+  MonitorElement* vertexChi2H_;
+  MonitorElement* vertexChi2oNDFH_;
+  MonitorElement* vertexChi2ProbH_;
 
   MonitorElement* nPixBarrelH_;
   MonitorElement* nPixEndcapH_;
@@ -839,11 +848,23 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     beamSpotZposH_ = ibook.book1DD("beamSpotZpos", "d_{z} w.r.t beam spot", 100, -20.0, 20.0);
     beamSpotZposerrH_ = ibook.book1DD("beamSpotZposerr", "error on d_{z} w.r.t. beam spot", 50, 0.0, 0.25);
 
+    nVertexH_ = ibook.book1DD("nVertex", "# of vertices", 120, -0.5, 119.5);
+    nVtxH_ = ibook.book1DD("nVtx", "# of vtxs", 120, -0.5, 119.5);
+    nGoodVtxH_ = ibook.book1DD("nGoodVtx", "Number of good vertices", 120, -0.5, 119.5);
+
     vertexXposH_ = ibook.book1DD("vertexXpos", "Vertex X position", 100, -0.1, 0.1);
     vertexYposH_ = ibook.book1DD("vertexYpos", "Vertex Y position", 200, -0.1, 0.1);
     vertexZposH_ = ibook.book1DD("vertexZpos", "Vertex Z position", 100, -20.0, 20.0);
-    nVertexH_ = ibook.book1DD("nVertex", "# of vertices", 120, -0.5, 119.5);
-    nVtxH_ = ibook.book1DD("nVtx", "# of vtxs", 120, -0.5, 119.5);
+
+    vertexXYposBSH_ = ibook.book1DD("vertexXYposBS", "Vertex XY position w.r.t beam spot", 100, 0.0, 1.0);
+    vertexXYposerrBSH_ = ibook.book1DD("vertexXYposerrBS", "Vertex XY position error w.r.t beam spot", 50, 0.0, 0.25);
+    vertexZposBSH_ = ibook.book1DD("vertexZposBS", "Vertex Z position w.r.t beam spot", 100, -20.0, 20.0);
+    vertexZposerrBSH_ = ibook.book1DD("vertexZposerrBS", "Vertex Z position error w.r.t beam spot", 50, 0.0, 0.25);
+    
+    vertexChi2H_ = ibook.book1DD("vertexChi2", "Vertex chi2", 100, 0.0, 10.0);
+    vertexChi2oNDFH_ = ibook.book1DD("vertexChi2oNDF", "Vertex chi2/ndof", 100, 0.0, 10.0);
+    vertexChi2ProbH_ = ibook.book1DD("vertexChi2Prob", "Vertex chi2 probability", 50, 0.0, 1.0);
+
 
     nMissingInnerHitBH_ = ibook.book1DD("nMissingInnerHitB", "No. missing inner hit per Track in Barrel", 6, -0.5, 5.5);
     nMissingInnerHitEH_ = ibook.book1DD("nMissingInnerHitE", "No. missing inner hit per Track in Endcap", 6, -0.5, 5.5);
@@ -1526,6 +1547,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
 
   // Get MVA and quality mask collections
   int ntracks = 0;
+  int nGoodVertices = 0;
   std::vector<TLorentzVector> list;
 
   const TransientTrackBuilder* theB = &iSetup.getData(transTrackToken_);
@@ -1955,8 +1977,65 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
     edm::LogError("StandaloneTrackMonitor") << "Error! Failed to get reco::Track collection, " << trackTag_;
   }
 
+  if (vertexColl.isValid()) {
+    if (verbose_)
+      edm::LogInfo("StandaloneTrackMonitor") << "Total # of Vertices: " << vertexColl->size();
+
+    for (auto const& vertex : *vertexColl) {
+
+      if (!vertex.isValid())
+        continue;
+      ++nGoodVertices;
+
+      double vx = vertex.x();
+      double vy = vertex.y();
+      double vz = vertex.z();
+      double vtx_chi2 = vertex.chi2();
+      double vtx_ndof = vertex.ndof();
+      double vtx_chi2norm = vertex.normalizedChi2();
+      double vtx_chi2prob = TMath::Prob(vtx_chi2, (int)vtx_ndof);
+
+      vertexXH_->Fill(vx, wfac);
+      vertexYH_->Fill(vy, wfac);
+      vertexZH_->Fill(vz, wfac);
+      vertexChi2H_->Fill(vtx_chi2, wfac);
+      vertexChi2oNDFH_->Fill(vtx_chi2norm, wfac);
+      vertexChi2ProbH_->Fill(vtx_chi2prob, wfac);
+      
+      if (beamSpot.isValid()) {
+
+        reco::Vertex beamspotvertex((*beamSpot).position(), (*beamSpot).covariance3D());
+
+        double deltaX = vertex.x() - beamspotvertex.x();
+        double deltaY = vertex.y() - beamspotvertex.y();
+
+        double vtx_dxy = TMath::sqrt(deltaX * deltaX + deltaY * deltaY);  // vertex transverse distance from beamspot position
+        double vtx_dxyError = TMath::sqrt(
+          (deltaX*deltaX*vertex.xError()*vertex.xError()) +
+          (deltaY*deltaY*vertex.yError()*vertex.yError()) +
+          (2*deltaX*deltaY*vertex.covariance(0,1))) / vtx_dxy;
+
+        double vtx_dz = vertex.z() - beamspotvertex.z();
+        double vtx_dzError = vertex.zError();
+
+        vertexXYposBSH_->Fill(vtx_dxy, wfac);
+        vertexXYposBSErrH_->Fill(vtx_dxyError, wfac);
+        vertexZposBSH_->Fill(vtx_dz, wfac);
+        vertexZposBSErrH_->Fill(vtx_dzError, wfac);
+      }
+      else {
+        edm::LogError("StandaloneTrackMonitor") << "Beamspot for input tag: " << bsTag_ << " not found!!";
+      }
+
+
+
+    
+
+  }
+
   if (haveAllHistograms_) {
     nTracksH_->Fill(ntracks, wfac);
+    nGoodVtxH_->Fill(nGoodVertices, wfac);
     edm::Handle<std::vector<reco::PFJet> > jetsColl;
     iEvent.getByToken(jetsToken_, jetsColl);
     nJet_->Fill(jetsColl->size());
