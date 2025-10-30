@@ -841,23 +841,23 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     nlostTIDHitsH_ = ibook.book1DD("nlostTIDHits", "No. of Lost Hits in Strip TID", 5, -0.5, 4.5);
     nlostTECHitsH_ = ibook.book1DD("nlostTECHits", "No. of Lost Hits in Strip TEC", 10, -0.5, 9.5);
 
-    trkLayerwithMeasurementH_ = ibook.book1DD("trkLayerwithMeasurement", "No. of Layers per Track", 20, 0.0, 20.0);
+    trkLayerwithMeasurementH_ = ibook.book1DD("trkLayerwithMeasurement", "No. of Layers per Track", 20, -0.5, 19.5);
     pixelLayerwithMeasurementH_ =
-        ibook.book1DD("pixelLayerwithMeasurement", "No. of Pixel Layers per Track", 10, 0.0, 10.0);
+        ibook.book1DD("pixelLayerwithMeasurement", "No. of Pixel Layers per Track", 10, -0.5, 9.5);
     pixelBLayerwithMeasurementH_ =
-        ibook.book1DD("pixelBLayerwithMeasurement", "No. of Pixel Barrel Layers per Track", 5, 0.0, 5.0);
+        ibook.book1DD("pixelBLayerwithMeasurement", "No. of Pixel Barrel Layers per Track", 5, -0.5, 4.5);
     pixelELayerwithMeasurementH_ =
-        ibook.book1DD("pixelELayerwithMeasurement", "No. of Pixel Endcap Layers per Track", 5, 0.0, 5.0);
+        ibook.book1DD("pixelELayerwithMeasurement", "No. of Pixel Endcap Layers per Track", 5, -0.5, 4.5);
     stripLayerwithMeasurementH_ =
-        ibook.book1DD("stripLayerwithMeasurement", "No. of Strip Layers per Track", 20, 0.0, 20.0);
+        ibook.book1DD("stripLayerwithMeasurement", "No. of Strip Layers per Track", 20, -0.5, 19.5);
     stripTIBLayerwithMeasurementH_ =
-        ibook.book1DD("stripTIBLayerwithMeasurement", "No. of Strip TIB Layers per Track", 10, 0.0, 10.0);
+        ibook.book1DD("stripTIBLayerwithMeasurement", "No. of Strip TIB Layers per Track", 10, -0.5, 9.5);
     stripTOBLayerwithMeasurementH_ =
-        ibook.book1DD("stripTOBLayerwithMeasurement", "No. of Strip TOB Layers per Track", 10, 0.0, 10.0);
+        ibook.book1DD("stripTOBLayerwithMeasurement", "No. of Strip TOB Layers per Track", 10, -0.5, 9.5);
     stripTIDLayerwithMeasurementH_ =
-        ibook.book1DD("stripTIDLayerwithMeasurement", "No. of Strip TID Layers per Track", 5, 0.0, 5.0);
+        ibook.book1DD("stripTIDLayerwithMeasurement", "No. of Strip TID Layers per Track", 5, -0.5, 4.5);
     stripTECLayerwithMeasurementH_ =
-        ibook.book1DD("stripTECLayerwithMeasurement", "No. of Strip TEC Layers per Track", 15, 0.0, 15.0);
+        ibook.book1DD("stripTECLayerwithMeasurement", "No. of Strip TEC Layers per Track", 15, -0.5, 14.5);
 
     nlostHitsH_ = ibook.book1DD("nlostHits", "No. of Lost Hits", 10, -0.5, 9.5);
     nMissingExpectedInnerHitsH_ =
@@ -926,13 +926,13 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
   }
   // Exclusive histograms
 
-  nLostHitByLayerH_ = ibook.book1DD("nLostHitByLayer", "No. of Lost Hit per Layer", 29, 0.5, 29.5);
+  nLostHitByLayerH_ = ibook.book1DD("nLostHitByLayer", "No. of Lost Hit per Layer", 30, -0.5, 29.5);
 
   nLostHitByLayerPixH_ =
-      ibook.book1DD("nLostHitByLayerPix", "No. of Lost Hit per Layer for Pixel detector", 7, 0.5, 7.5);
+      ibook.book1DD("nLostHitByLayerPix", "No. of Lost Hit per Layer for Pixel detector", 8, -0.5, 7.5);
 
   nLostHitByLayerStripH_ =
-      ibook.book1DD("nLostHitByLayerStrip", "No. of Lost Hit per Layer for SiStrip detector", 22, 0.5, 22.5);
+      ibook.book1DD("nLostHitByLayerStrip", "No. of Lost Hit per Layer for SiStrip detector", 23, -0.5, 22.5);
 
   nLostHitsVspTH_ = ibook.bookProfile("nLostHitsVspT",
                                       "Number of Lost Hits Vs pT",
@@ -1735,13 +1735,22 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
             losthitBylayer = layer + 20;
             losthitBylayerStrip = layer + 13;
           }
-          if (losthitBylayer > -1)
-            nLostHitByLayerH_->Fill(losthitBylayer, wfac);
-          if (losthitBylayerPix > -1)
-            nLostHitByLayerPixH_->Fill(losthitBylayerPix, wfac);
-          if (losthitBylayerStrip > -1)
-            nLostHitByLayerStripH_->Fill(losthitBylayerStrip, wfac);
+          
         }
+        else {
+          if (hitp.pixelBarrelHitFilter(hit) || hitp.pixelEndcapHitFilter(hit)) {
+            losthitBylayer = 0;
+            losthitBylayerPix = 0;
+          } 
+          else if (hitp.stripTIBHitFilter(hit) || hitp.stripTIDHitFilter(hit) ||
+                   hitp.stripTOBHitFilter(hit) || hitp.stripTECHitFilter(hit)) {
+            losthitBylayer = 0;
+            losthitBylayerStrip = 0;
+          }
+        }
+        if (losthitBylayer > -1) nLostHitByLayerH_->Fill(losthitBylayer, wfac);
+        if (losthitBylayerPix > -1) nLostHitByLayerPixH_->Fill(losthitBylayerPix, wfac);
+        if (losthitBylayerStrip > -1) nLostHitByLayerStripH_->Fill(losthitBylayerStrip, wfac);
       }
 
       if (haveAllHistograms_) {
