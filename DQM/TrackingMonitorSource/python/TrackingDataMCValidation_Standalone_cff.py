@@ -11,7 +11,8 @@ selectedPrimaryVertices = cms.EDFilter("VertexSelector",
                                        cut = cms.string(""),
                                        filter = cms.bool(True)
                                        )
-# Track Selector
+
+# Basic track Selector
 selectedTracks = cms.EDFilter("TrackSelector",
                               src = cms.InputTag('generalTracks'),
                               cut = cms.string("pt > 1.0"),
@@ -19,17 +20,35 @@ selectedTracks = cms.EDFilter("TrackSelector",
                               filter = cms.bool(True)
                               )
 
-selectedTracksFPixHole = cms.EDFilter("TrackSelector",
+# Various Eta Range Selectors
+selectedTracksAbsEtaUnder1p8 = cms.EDFilter("TrackSelector",
+                                            src = cms.InputTag('selectedTracks'),
+                                            cut = cms.string("eta < 1.8 && eta > -1.8"),
+                                            filter = cms.bool(False)
+                                            )
+
+selectedTracksAbsEta1p8to2p5 = cms.EDFilter("TrackSelector",
+                                            src = cms.InputTag('selectedTracks'),
+                                            cut = cms.string("(eta < 2.5 && eta > 1.8) || (eta > -2.5 && eta < -1.8)"),
+                                            filter = cms.bool(False)
+                                            )
+
+selectedTracksAbsEtaOver2p5 = cms.EDFilter("TrackSelector",
                                       src = cms.InputTag('selectedTracks'),
-                                      cut = cms.string("eta < -1.4 && phi > 2.5"),
-                                      #cut = cms.string(""),
+                                      cut = cms.string("eta > 2.5 || eta < -2.5"),
                                       filter = cms.bool(False)
                                       )
 
-selectedTracksEtaRange = cms.EDFilter("TrackSelector",
+selectedTracksAbsEtaUnder2p5 = cms.EDFilter("TrackSelector",
+                                            src = cms.InputTag('selectedTracks'),
+                                            cut = cms.string("eta < 2.5 && eta > -2.5"),
+                                            filter = cms.bool(False)
+                                            )
+
+# FPix hole selector
+selectedTracksFPixHole = cms.EDFilter("TrackSelector",
                                       src = cms.InputTag('selectedTracks'),
-                                      cut = cms.string("eta < 2.5 && eta > -2.5"),
-                                      #cut = cms.string(""),
+                                      cut = cms.string("eta < -1.4 && phi > 2.5"),
                                       filter = cms.bool(False)
                                       )
 
@@ -142,6 +161,50 @@ standaloneTrackMonitorMC = standaloneTrackMonitor.clone(
     doPUCorrection    = True,
     isMC              = True
     )
+standaloneTrackMonitorEtaUnder1p8 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEtaUnder1p8",
+    trackInputTag     = "selectedTracksAbsEtaUnder1p8",
+    )
+standaloneTrackMonitorMCEtaUnder1p8 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEtaUnder1p8",
+    trackInputTag     = "selectedTracksAbsEtaUnder1p8",
+    puScaleFactorFile = "PileupScaleFactor_316060_wrt_nVertex_ZeroBias.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorEta1p8to2p5 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEta1p8to2p5",
+    trackInputTag     = "selectedTracksAbsEta1p8to2p5",
+    )
+standaloneTrackMonitorMCEta1p8to2p5 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEta1p8to2p5",
+    trackInputTag     = "selectedTracksAbsEta1p8to2p5",
+    puScaleFactorFile = "PileupScaleFactor_316060_wrt_nVertex_ZeroBias.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorEtaOver2p5 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEtaOver2p5",
+    trackInputTag     = "selectedTracksAbsEtaOver2p5",
+    )
+standaloneTrackMonitorMCEtaOver2p5 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEtaOver2p5",
+    trackInputTag     = "selectedTracksAbsEtaOver2p5",
+    puScaleFactorFile = "PileupScaleFactor_316060_wrt_nVertex_ZeroBias.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorEtaUnder2p5 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEtaUnder2p5",
+    trackInputTag     = "selectedTracksAbsEtaUnder2p5",
+    )
+standaloneTrackMonitorMCEtaUnder2p5 = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksEtaUnder2p5",
+    trackInputTag     = "selectedTracksAbsEtaUnder2p5",
+    puScaleFactorFile = "PileupScaleFactor_316060_wrt_nVertex_ZeroBias.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
 standaloneTrackMonitorFPixHole = standaloneTrackMonitor.clone(
     folderName        = "highPurityTracksFPixHole",
     trackInputTag     = "selectedTracksFPixHole",
@@ -153,28 +216,24 @@ standaloneTrackMonitorMCFPixHole = standaloneTrackMonitor.clone(
     doPUCorrection    = True,
     isMC              = True
     )
-standaloneTrackMonitorEtaRange = standaloneTrackMonitor.clone(
-    folderName        = "highPurityTracksEtaRange",
-    trackInputTag     = "selectedTracksEtaRange",
-    )
-standaloneTrackMonitorMCEtaRange = standaloneTrackMonitor.clone(
-    folderName        = "highPurityTracksEtaRange",
-    trackInputTag     = "selectedTracksEtaRange",
-    puScaleFactorFile = "PileupScaleFactor_316060_wrt_nVertex_ZeroBias.root",
-    doPUCorrection    = True,
-    isMC              = True
-    )
+
 standaloneValidationMinbias = cms.Sequence(
     hltPathFilter
     * selectedPrimaryVertices 
 #    * selectedMultiplicityTracks  # Use selectedMultiplicityTracks if needed nTracks > desired multiplicity
 #    * selectedAlcaRecoZBTracks
     * selectedTracks
-    * selectedTracksFPixHole
-    * selectedTracksEtaRange
+    * selectedTracksAbsEtaUnder1p8
+    * selectedTracksAbsEta1p8to2p5
+    * selectedTracksAbsEtaOver2p5
+    * selectedTracksAbsEtaUnder2p5
+#    * selectedTracksFPixHole
     * standaloneTrackMonitor
-    * standaloneTrackMonitorFPixHole
-    * standaloneTrackMonitorEtaRange
+    * standaloneTrackMonitorEtaUnder1p8
+    * standaloneTrackMonitorEta1p8to2p5
+    * standaloneTrackMonitorEtaOver2p5
+    * standaloneTrackMonitorEtaUnder2p5
+#    * standaloneTrackMonitorFPixHole
     * KshortMonitor
     * LambdaMonitor)
 
@@ -184,11 +243,17 @@ standaloneValidationMinbiasMC = cms.Sequence(
 #    * selectedMultiplicityTracks  # Use selectedMultiplicityTracks if needed nTracks > desired multiplicity
 #    * selectedAlcaRecoZBTracks
     * selectedTracks
-    * selectedTracksFPixHole
-    * selectedTracksEtaRange
+    * selectedTracksAbsEtaUnder1p8
+    * selectedTracksAbsEta1p8to2p5
+    * selectedTracksAbsEtaOver2p5
+    * selectedTracksAbsEtaUnder2p5
+#    * selectedTracksFPixHole
     * standaloneTrackMonitorMC
-    * standaloneTrackMonitorMCFPixHole
-    * standaloneTrackMonitorMCEtaRange
+    * standaloneTrackMonitorMCEtaUnder1p8
+    * standaloneTrackMonitorMCEta1p8to2p5
+    * standaloneTrackMonitorMCEtaOver2p5
+    * standaloneTrackMonitorMCEtaUnder2p5
+#    * standaloneTrackMonitorMCFPixHole
     * KshortMonitor
     * LambdaMonitor)
 
