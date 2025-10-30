@@ -1711,10 +1711,12 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
 
       for (int i = 0; i < hitp.numberOfAllHits(reco::HitPattern::TRACK_HITS); i++) {
         uint32_t hit = hitp.getHitPattern(reco::HitPattern::TRACK_HITS, i);
-        if (hitp.missingHitFilter(hit)) {
-          double losthitBylayer = -1.0;
-          double losthitBylayerPix = -1.0;
-          double losthitBylayerStrip = -1.0;
+        
+        double losthitBylayer = -1.0;
+        double losthitBylayerPix = -1.0;
+        double losthitBylayerStrip = -1.0;
+        
+        if (hitp.missingHitFilter(hit)) {  
           int layer = hitp.getLayer(hit);
           if (hitp.pixelBarrelHitFilter(hit)) {
             losthitBylayer = layer;
@@ -1735,7 +1737,6 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
             losthitBylayer = layer + 20;
             losthitBylayerStrip = layer + 13;
           }
-          
         }
         else {
           if (hitp.pixelBarrelHitFilter(hit) || hitp.pixelEndcapHitFilter(hit)) {
