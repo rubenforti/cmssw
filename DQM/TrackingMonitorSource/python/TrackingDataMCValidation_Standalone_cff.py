@@ -117,15 +117,38 @@ hltPathFilterTtbar = cms.EDFilter("HLTPathSelector",
                              triggerEvent = cms.untracked.InputTag("hltTriggerSummaryAOD","","HLT")
                              )
 
-# Z->MuMu event selector
+# Z->MuMu event selectors
 ztoMMEventSelector = cms.EDFilter("ZtoMMEventSelector")
 muonTracks = cms.EDProducer("ZtoMMMuonTrackProducer")
+
+muonTracksAbsEtaUnder1p8 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('muonTracks'),
+                                        cut = cms.string("eta < 1.8 && eta > -1.8"),
+                                        filter = cms.bool(False)
+                                        )
+muonTracksAbsEta1p8to2p5 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('muonTracks'),
+                                        cut = cms.string("(eta < 2.5 && eta > 1.8) || (eta > -2.5 && eta < -1.8)"),
+                                        filter = cms.bool(False)
+                                        )
+muonTracksAbsEtaOver2p5 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('muonTracks'),
+                                        cut = cms.string("eta > 2.5 || eta < -2.5"),
+                                        filter = cms.bool(False)
+                                        )
+muonTracksAbsEtaUnder2p5 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('muonTracks'),
+                                        cut = cms.string("eta < 2.5 && eta > -2.5"),
+                                        filter = cms.bool(False)
+                                        )
+
 muonTracksFPixHole = cms.EDFilter("TrackSelector",
                                   src = cms.InputTag('muonTracks'),
                                   cut = cms.string("eta < -1.4 && phi > 2.5"),
                                   #cut = cms.string(""),
                                   filter = cms.bool(False)
                                   )
+
 # Z->ee event selector
 ztoEEEventSelector = cms.EDFilter("ZtoEEEventSelector")
 electronTracks = cms.EDProducer("ZtoEEElectronTrackProducer")
@@ -420,16 +443,15 @@ standaloneValidationElecMC = cms.Sequence(
     * standaloneTrackMonitorMCFPixHole
     * ZEEDetailsMC)
 
+
 ##################
 # For ZtoMM
 ##################
+
+# Basic track Selector for muons
 standaloneTrackMonitorMuon = standaloneTrackMonitor.clone(
     folderName = "MuonTracks",
     trackInputTag = 'muonTracks',
-    )
-standaloneTrackMonitorMuonFPixHole = standaloneTrackMonitor.clone(
-    folderName = "MuonTracksFPixHole",
-    trackInputTag = 'muonTracksFPixHole',
     )
 standaloneTrackMonitorMuonMC = standaloneTrackMonitor.clone(
     folderName = "MuonTracks",
@@ -437,6 +459,59 @@ standaloneTrackMonitorMuonMC = standaloneTrackMonitor.clone(
     puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
     doPUCorrection    = True,
     isMC              = True
+    )
+
+standaloneTrackMonitorMuonEtaUnder1p8 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEtaUnder1p8",
+    trackInputTag = 'muonTracksAbsEtaUnder1p8',
+    )
+standaloneTrackMonitorMuonMCEtaUnder1p8 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEtaUnder1p8",
+    trackInputTag = 'muonTracksAbsEtaUnder1p8',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+
+standaloneTrackMonitorMuonEta1p8to2p5 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEta1p8to2p5",
+    trackInputTag = 'muonTracksAbsEta1p8to2p5',
+    )
+standaloneTrackMonitorMuonMCEta1p8to2p5 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEta1p8to2p5",
+    trackInputTag = 'muonTracksAbsEta1p8to2p5',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+
+standaloneTrackMonitorMuonEtaOver2p5 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEtaOver2p5",
+    trackInputTag = 'muonTracksAbsEtaOver2p5',
+    )
+standaloneTrackMonitorMuonMCEtaOver2p5 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEtaOver2p5",
+    trackInputTag = 'muonTracksAbsEtaOver2p5',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+
+standaloneTrackMonitorMuonEtaUnder2p5 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEtaUnder2p5",
+    trackInputTag = 'muonTracksAbsEtaUnder2p5',
+    )
+standaloneTrackMonitorMuonMCEtaUnder2p5 = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksEtaUnder2p5",
+    trackInputTag = 'muonTracksAbsEtaUnder2p5',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+
+standaloneTrackMonitorMuonFPixHole = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksFPixHole",
+    trackInputTag = 'muonTracksFPixHole',
     )
 standaloneTrackMonitorMuonMCFPixHole = standaloneTrackMonitor.clone(
     folderName = "MuonTracksFPixHole",
@@ -449,28 +524,38 @@ standaloneTrackMonitorMuonMCFPixHole = standaloneTrackMonitor.clone(
 standaloneValidationMuon = cms.Sequence(
     hltPathFilterMuon
     * selectedTracks
-    * selectedTracksFPixHole
+#    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoMMEventSelector
     * muonTracks
-    * muonTracksFPixHole
+#    * muonTracksFPixHole
     * standaloneTrackMonitorMuon
-    * standaloneTrackMonitorMuonFPixHole
+    * standaloneTrackMonitorMuonEtaUnder1p8
+    * standaloneTrackMonitorMuonEta1p8to2p5
+    * standaloneTrackMonitorMuonEtaOver2p5
+    * standaloneTrackMonitorMuonEtaUnder2p5
+#    * standaloneTrackMonitorMuonFPixHole
     * standaloneTrackMonitor
-    * standaloneTrackMonitorFPixHole)
+#    * standaloneTrackMonitorFPixHole
+    )
 
 standaloneValidationMuonMC = cms.Sequence(
     hltPathFilterMuon
     * selectedTracks
-    * selectedTracksFPixHole
+#    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoMMEventSelector
     * muonTracks
-    * muonTracksFPixHole
+#    * muonTracksFPixHole
     * standaloneTrackMonitorMuonMC
-    * standaloneTrackMonitorMuonMCFPixHole 
+    * standaloneTrackMonitorMuonMCEtaUnder1p8
+    * standaloneTrackMonitorMuonMCEta1p8to2p5
+    * standaloneTrackMonitorMuonMCEtaOver2p5
+    * standaloneTrackMonitorMuonMCEtaUnder2p5
+#    * standaloneTrackMonitorMuonMCFPixHole 
     * standaloneTrackMonitorMC
-    * standaloneTrackMonitorMCFPixHole)
+#    * standaloneTrackMonitorMCFPixHole
+    )
 
 ##################
 # For ttbar
