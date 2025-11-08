@@ -528,6 +528,10 @@ standaloneValidationMuon = cms.Sequence(
     * selectedPrimaryVertices
     * ztoMMEventSelector
     * muonTracks
+    * muonTracksAbsEtaUnder1p8
+    * muonTracksAbsEta1p8to2p5
+    * muonTracksAbsEtaOver2p5
+    * muonTracksAbsEtaUnder2p5
 #    * muonTracksFPixHole
     * standaloneTrackMonitorMuon
     * standaloneTrackMonitorMuonEtaUnder1p8
@@ -546,6 +550,10 @@ standaloneValidationMuonMC = cms.Sequence(
     * selectedPrimaryVertices
     * ztoMMEventSelector
     * muonTracks
+    * muonTracksAbsEtaUnder1p8
+    * muonTracksAbsEta1p8to2p5
+    * muonTracksAbsEtaOver2p5
+    * muonTracksAbsEtaUnder2p5
 #    * muonTracksFPixHole
     * standaloneTrackMonitorMuonMC
     * standaloneTrackMonitorMuonMCEtaUnder1p8
