@@ -141,7 +141,6 @@ muonTracksAbsEtaUnder2p5 = cms.EDFilter("TrackSelector",
                                         cut = cms.string("eta < 2.5 && eta > -2.5"),
                                         filter = cms.bool(False)
                                         )
-
 muonTracksFPixHole = cms.EDFilter("TrackSelector",
                                   src = cms.InputTag('muonTracks'),
                                   cut = cms.string("eta < -1.4 && phi > 2.5"),
@@ -149,16 +148,39 @@ muonTracksFPixHole = cms.EDFilter("TrackSelector",
                                   filter = cms.bool(False)
                                   )
 
-# Z->ee event selector
+# Z->ee event selectors
 ztoEEEventSelector = cms.EDFilter("ZtoEEEventSelector")
 electronTracks = cms.EDProducer("ZtoEEElectronTrackProducer")
+
+electronTracksAbsEtaUnder1p8 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('electronTracks'),
+                                        cut = cms.string("eta < 1.8 && eta > -1.8"),
+                                        filter = cms.bool(False)
+                                        )
+electronTracksAbsEta1p8to2p5 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('electronTracks'),
+                                        cut = cms.string("(eta < 2.5 && eta > 1.8) || (eta > -2.5 && eta < -1.8)"),
+                                        filter = cms.bool(False)
+                                        )
+electronTracksAbsEtaOver2p5 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('electronTracks'),
+                                        cut = cms.string("eta > 2.5 || eta < -2.5"),
+                                        filter = cms.bool(False)
+                                        )
+electronTracksAbsEtaUnder2p5 = cms.EDFilter("TrackSelector",
+                                        src = cms.InputTag('electronTracks'),
+                                        cut = cms.string("eta < 2.5 && eta > -2.5"),
+                                        filter = cms.bool(False)
+                                        )
 electronTracksFPixHole = cms.EDFilter("TrackSelector",
                                       src = cms.InputTag('electronTracks'),
                                       cut = cms.string("eta < -1.4 && phi > 2.5"),
                                       #cut = cms.string(""),
                                       filter = cms.bool(False)
                                       )
-#ttbar event selector
+
+
+# Ttbar event selector
 ttbarEventSelector = cms.EDFilter("ttbarEventSelector")
 ttbarTracks = cms.EDProducer("TtbarTrackProducer")
 
@@ -383,24 +405,74 @@ standaloneValidationLambdasMC = cms.Sequence(
     * standaloneTrackMonitorLambdaMCFPixHole
     * LambdaMonitor)
 
+
 ##################
 # For ZtoEE
 ##################
+
+# Basic track Selector for electrons
 standaloneTrackMonitorElec = standaloneTrackMonitor.clone(
     folderName = "ElectronTracks",
     trackInputTag = 'electronTracks',
     )
-standaloneTrackMonitorElecFPixHole = standaloneTrackMonitor.clone(
-    folderName = "ElectronTracksFPixHole",
-    trackInputTag = 'electronTracksFPixHole',
-    )
-
 standaloneTrackMonitorElecMC = standaloneTrackMonitor.clone(
     folderName = "ElectronTracks",
     trackInputTag = 'electronTracks',
     puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
     doPUCorrection    = True,
     isMC              = True
+    )
+
+standaloneTrackMonitorElecEtaUnder1p8 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEtaUnder1p8",
+    trackInputTag = 'electronTracksAbsEtaUnder1p8',
+    )
+standaloneTrackMonitorElecMCEtaUnder1p8 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEtaUnder1p8",
+    trackInputTag = 'electronTracksAbsEtaUnder1p8',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorElecEta1p8to2p5 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEta1p8to2p5",
+    trackInputTag = 'electronTracksAbsEta1p8to2p5',
+    )
+standaloneTrackMonitorElecMCEta1p8to2p5 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEta1p8to2p5",
+    trackInputTag = 'electronTracksAbsEta1p8to2p5',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+
+standaloneTrackMonitorElecEtaOver2p5 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEtaOver2p5",
+    trackInputTag = 'electronTracksAbsEtaOver2p5',
+    )
+standaloneTrackMonitorElecMCEtaOver2p5 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEtaOver2p5",
+    trackInputTag = 'electronTracksAbsEtaOver2p5',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+
+standaloneTrackMonitorElecEtaUnder2p5 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEtaUnder2p5",
+    trackInputTag = 'electronTracksAbsEtaUnder2p5',
+    )
+standaloneTrackMonitorElecMCEtaUnder2p5 = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksEtaUnder2p5",
+    trackInputTag = 'electronTracksAbsEtaUnder2p5',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )   
+
+standaloneTrackMonitorElecFPixHole = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksFPixHole",
+    trackInputTag = 'electronTracksFPixHole',
     )
 standaloneTrackMonitorElecMCFPixHole = standaloneTrackMonitor.clone(
     folderName = "ElectronTracksFPixHole",
@@ -419,30 +491,46 @@ ZEEDetailsMC = ZEEDetails.clone(
 standaloneValidationElec = cms.Sequence(
     hltPathFilterElectron
     * selectedTracks
-    * selectedTracksFPixHole
+#    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoEEEventSelector
     * electronTracks
-    * electronTracksFPixHole
+    * electronTracksAbsEtaUnder1p8
+    * electronTracksAbsEta1p8to2p5
+    * electronTracksAbsEtaOver2p5
+    * electronTracksAbsEtaUnder2p5
+#    * electronTracksFPixHole
     * standaloneTrackMonitorElec
-    * standaloneTrackMonitorElecFPixHole   
+    * standaloneTrackMonitorElecEtaUnder1p8
+    * standaloneTrackMonitorElecEta1p8to2p5
+    * standaloneTrackMonitorElecEtaOver2p5
+    * standaloneTrackMonitorElecEtaUnder2p5
+#    * standaloneTrackMonitorElecFPixHole   
     * standaloneTrackMonitor
-    * standaloneTrackMonitorFPixHole
+#    * standaloneTrackMonitorFPixHole
     * ZEEDetails)
+
 standaloneValidationElecMC = cms.Sequence(
     hltPathFilterElectron
     * selectedTracks
-    * selectedTracksFPixHole
+#    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoEEEventSelector
     * electronTracks
-    * electronTracksFPixHole
-    * standaloneTrackMonitorElecMC   
-    * standaloneTrackMonitorElecMCFPixHole
+    * electronTracksAbsEtaUnder1p8
+    * electronTracksAbsEta1p8to2p5
+    * electronTracksAbsEtaOver2p5
+    * electronTracksAbsEtaUnder2p5
+#    * electronTracksFPixHole
+    * standaloneTrackMonitorElecMC
+    * standaloneTrackMonitorElecMCEtaUnder1p8
+    * standaloneTrackMonitorElecMCEta1p8to2p5
+    * standaloneTrackMonitorElecMCEtaOver2p5
+    * standaloneTrackMonitorElecMCEtaUnder2p5
+#    * standaloneTrackMonitorElecMCFPixHole
     * standaloneTrackMonitorMC
-    * standaloneTrackMonitorMCFPixHole
+#    * standaloneTrackMonitorMCFPixHole
     * ZEEDetailsMC)
-
 
 ##################
 # For ZtoMM
