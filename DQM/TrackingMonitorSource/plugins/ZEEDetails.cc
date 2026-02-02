@@ -308,8 +308,8 @@ void ZEEDetails::analyze(edm::Event const& iEvent, edm::EventSetup const& iSetup
           int ntrueInt = v.getTrueNumInteractions();
           int nVertex = (vertexColl.isValid() ? vertexColl->size() : 0);
           if (doPUCorrection_) {
-            if (nTrueInt > -1 && nTrueInt < int(vpu_.size()))
-              wfac = vpu_.at(nTrueInt);
+            if (ntrueInt > -1 && ntrueInt < int(vpu_.size()))
+              wfac = vpu_.at(ntrueInt);
             else
               wfac = 0.0;
           }
