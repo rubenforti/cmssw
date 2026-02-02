@@ -83,7 +83,9 @@ private:
   std::vector<float> vtrack_;
   const bool isMC_;
   const bool doPUCorrection_;
+  const bool doNvtxCorrection_;
   const std::string puScaleFactorFile_;
+  const std::string nvtxScaleFactorFile_;
 
   MonitorElement* Zpt_;
   MonitorElement* ZInvMass_;
@@ -120,7 +122,9 @@ void ZEEDetails::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
   desc.addUntracked<std::string>("trackQuality", "highPurity");
   desc.addUntracked<bool>("isMC", false);
   desc.addUntracked<bool>("doPUCorrection", false);
+  desc.addUntracked<bool>("doNvtxCorrection", false);
   desc.addUntracked<std::string>("puScaleFactorFile", "PileupScaleFactor.root");
+  desc.addUntracked<std::string>("nvtxScaleFactorFile", "PileupScaleFactor.root");
   descriptions.addWithDefaultLabel(desc);
 }
 
@@ -157,11 +161,27 @@ ZEEDetails::ZEEDetails(const edm::ParameterSet& ps)
       trackQuality_(ps.getUntrackedParameter<std::string>("trackQuality", "highPurity")),
       isMC_(ps.getUntrackedParameter<bool>("isMC", false)),
       doPUCorrection_(ps.getUntrackedParameter<bool>("doPUCorrection", false)),
-      puScaleFactorFile_(ps.getUntrackedParameter<std::string>("puScaleFactorFile", "PileupScaleFactor.root")) {
+      doNvtxCorrection_(ps.getUntrackedParameter<bool>("doNvtxCorrection", false)),
+      puScaleFactorFile_(ps.getUntrackedParameter<std::string>("puScaleFactorFile", "PileupScaleFactor.root")),
+      nvtxScaleFactorFile_(ps.getUntrackedParameter<std::string>("nvtxScaleFactorFile", "PileupScaleFactor.root")) {
+
+  if (isMC_ && doPUCorrection_ && doNvtxCorrection_) {
+    throw std::runtime_error("if isMC is true, only one of doPUCorrection, and doNvtxCorrection can be true");
+  }
+
   if (isMC_ && doPUCorrection_) {
     vpu_.clear();
     TFile* f1 = TFile::Open(puScaleFactorFile_.c_str());
     TH1F* h1 = dynamic_cast<TH1F*>(f1->Get("pileupweight"));
+    for (int i = 1; i <= h1->GetNbinsX(); ++i)
+      vpu_.push_back(h1->GetBinContent(i));
+    f1->Close();
+  }
+
+  if (isMC_ && doNvtxCorrection_) {
+    vpu_.clear();
+    TFile* f1 = TFile::Open(nvtxScaleFactorFile_.c_str());
+    TH1F* h1 = dynamic_cast<TH1F*>(f1->Get("nvertexweight"));
     for (int i = 1; i <= h1->GetNbinsX(); ++i)
       vpu_.push_back(h1->GetBinContent(i));
     f1->Close();
@@ -285,8 +305,15 @@ void ZEEDetails::analyze(edm::Event const& iEvent, edm::EventSetup const& iSetup
       for (auto const& v : *PupInfo) {
         int bx = v.getBunchCrossing();
         if (bx == 0) {
+          int ntrueInt = v.getTrueNumInteractions();
           int nVertex = (vertexColl.isValid() ? vertexColl->size() : 0);
           if (doPUCorrection_) {
+            if (nTrueInt > -1 && nTrueInt < int(vpu_.size()))
+              wfac = vpu_.at(nTrueInt);
+            else
+              wfac = 0.0;
+          }
+          if (doNvtxCorrection_) {
             if (nVertex > -1 && nVertex < int(vpu_.size()))
               wfac = vpu_.at(nVertex);
             else
