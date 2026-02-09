@@ -2090,7 +2090,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
           vertexZposBSH_->Fill(vtx_dz, wfac);
           vertexZposerrBSH_->Fill(vtx_dzError, wfac);
 
-          vertexDxybsVsLumiRunH_->Fill(run, vtx_dxy)
+          vertexDxybsVsLumiRunH_->Fill(run, vtx_dxy);
 
         }
         else {
