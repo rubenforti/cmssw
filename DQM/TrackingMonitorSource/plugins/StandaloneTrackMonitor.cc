@@ -117,6 +117,7 @@ private:
   const edm::ParameterSet TrackEtaHistoPar_;
   const edm::ParameterSet TrackPhiHistoPar_;
   const edm::ParameterSet TrackPtHistoPar_;
+  const edm::ParameterSet LumiRunHistoPar_;
   const TrackerGeometry* tkGeom_ = nullptr;
 
   MonitorElement* trackEtaH_;
@@ -254,6 +255,7 @@ private:
   MonitorElement* vertexChi2H_;
   MonitorElement* vertexChi2oNDFH_;
   MonitorElement* vertexChi2ProbH_;
+  MonitorElement* vertexDxybsVsLumiRunH_;
 
   MonitorElement* nPixBarrelH_;
   MonitorElement* nPixEndcapH_;
@@ -453,6 +455,14 @@ void StandaloneTrackMonitor::fillDescriptions(edm::ConfigurationDescriptions& de
     desc.add<edm::ParameterSetDescription>("trackPhiH", TrackPhiHistoPar);
   }
 
+  {
+    edm::ParameterSetDescription LumiRunHistoPar;
+    LumiRunHistoPar.add<int>("Xbins", 100);
+    LumiRunHistoPar.add<double>("Xmin", 0.5);
+    LumiRunHistoPar.add<double>("Xmax", 100.5);
+    desc.add<edm::ParameterSetDescription>("lumiRunH", LumiRunHistoPar);
+  }
+
   descriptions.add("standaloneTrackMonitorDefault", desc);
 }
 
@@ -496,7 +506,8 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
           edm::ESInputTag{"", "TransientTrackBuilder"})),
       TrackEtaHistoPar_(ps.getParameter<edm::ParameterSet>("trackEtaH")),
       TrackPhiHistoPar_(ps.getParameter<edm::ParameterSet>("trackPhiH")),
-      TrackPtHistoPar_(ps.getParameter<edm::ParameterSet>("trackPtH")) {
+      TrackPtHistoPar_(ps.getParameter<edm::ParameterSet>("trackPtH")),
+      LumiRunHistoPar_(ps.getParameter<edm::ParameterSet>("lumiRunH")) {
   for (const auto& v : mvaProducers_) {
     mvaQualityTokens_.push_back(std::make_tuple(consumes<MVACollection>(edm::InputTag(v, "MVAValues")),
                                                 consumes<QualityMaskCollection>(edm::InputTag(v, "QualityMasks"))));
@@ -547,6 +558,7 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
   vertexChi2H_ = nullptr;
   vertexChi2oNDFH_ = nullptr;
   vertexChi2ProbH_ = nullptr;
+  vertexDxybsVsLumiRunH_ = nullptr;
 
   nPixBarrelH_ = nullptr;
   nPixEndcapH_ = nullptr;
@@ -886,6 +898,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     vertexChi2H_ = ibook.book1DD("vertexChi2", "Vertex chi2", 100, 0.0, 50.0);
     vertexChi2oNDFH_ = ibook.book1DD("vertexChi2oNDF", "Vertex chi2/ndof", 100, 0.0, 5.0);
     vertexChi2ProbH_ = ibook.book1DD("vertexChi2Prob", "Vertex chi2 probability", 50, 0.0, 1.0);
+    
+    vertexDxybsVsLumiRunH_ = ibook.bookProfile("vertexDxybsVsLumiRun",
+                                               "vertex dxy wrt BS Vs Luminosity Run",
+                                               LumiRunHistoPar_.getParameter<int32_t>("Xbins"),
+                                               LumiRunHistoPar_.getParameter<double>("Xmin"),
+                                               LumiRunHistoPar_.getParameter<double>("Xmax"),
+                                               0.0,
+                                               0.25,
+                                               "g");
 
 
     nMissingInnerHitBH_ = ibook.book1DD("nMissingInnerHitB", "No. missing inner hit per Track in Barrel", 6, -0.5, 5.5);
@@ -900,15 +921,17 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     nStripTOBH_ = ibook.book1DD("nHitStripTOB", "No. of hits in Strip TOB per Track", 30, 0, 30.0);
     nStripTECH_ = ibook.book1DD("nHitStripTEC", "No. of hits in Strip TEC per Track", 30, 0, 30.0);
     nStripTIDH_ = ibook.book1DD("nHitStripTID", "No. of hits in Strip TID per Tracks", 30, 0, 30.0);
+
     nTracksH_ = ibook.book1DD("nTracks", "No. of Tracks", 1200, -0.5, 1199.5);
     nTracks2DH_ = ibook.book2D("nTracks2D",
-                                           "Track vs Eta Phi",
-                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
-                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
-                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
-                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
-                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
-                                           TrackPhiHistoPar_.getParameter<double>("Xmax"));
+                               "Track vs Eta Phi",
+                               TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                               TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                               TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                               TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                               TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                               TrackPhiHistoPar_.getParameter<double>("Xmax"));
+
     nJet_ = ibook.book1DD("nJet", "Number of Jets", 101, -0.5, 100.5);
     Jet_pt_ = ibook.book1DD("Jet_pt", "Jet p_{T}", 200, 0., 200.);
     Jet_eta_ = ibook.book1DD("Jet_eta", "Jet #eta", 100, -5.2, 5.2);
@@ -918,12 +941,16 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     Zpt_ = ibook.book1DD("Zpt", "Z-boson transverse momentum", 100, 0, 100);
     ZInvMass_ = ibook.book1DD("ZInvMass", "m_{ll}", 120, 75, 105);
     cosPhi3DdileptonH_ = ibook.book1DD("cosPhi3Ddilepton", "cos#Phi_{3D,ll}", 202, -1.01, 1.01);
+
   }
+
   if (isMC_) {
     bunchCrossingH_ = ibook.book1DD("bunchCrossing", "Bunch Crossing", 60, 0, 60.0);
     nPUH_ = ibook.book1DD("nPU", "No of Pileup", 100, 0, 100.0);
     trueNIntH_ = ibook.book1DD("trueNInt", "True no of Interactions", 100, 0, 100.0);
   }
+
+
   // Exclusive histograms
 
   nLostHitByLayerH_ = ibook.book1DD("nLostHitByLayer", "No. of Lost Hit per Layer", 30, -0.5, 29.5);
@@ -1485,6 +1512,12 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
   // Get event setup (to get global transformation)
   const TrackerGeometry& tkGeom = (*tkGeom_);
 
+  // Get luminosity block information
+  edm::EventID id = iEvent.id();
+  unsigned int run = id.run();
+  //std::cout << "RUN VALUE IS:  " << run << std::endl;
+
+
   // Primary vertex collection
   edm::Handle<reco::VertexCollection> vertexColl;
   iEvent.getByToken(vertexToken_, vertexColl);
@@ -2017,11 +2050,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
 
       if (!vertex.isValid())
         continue;
-
-      if (!vertex.isFake() && vertex.ndof()>=4)
-        ++nGoodVertices;
-
-      
+     
       double vtx_x = vertex.x();
       double vtx_y = vertex.y();
       double vtx_z = vertex.z();
@@ -2030,36 +2059,43 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
       double vtx_chi2norm = vertex.normalizedChi2();
       double vtx_chi2prob = TMath::Prob(vtx_chi2, (int)vtx_ndof);
 
-      vertexChi2H_->Fill(vtx_chi2, wfac);
-      vertexChi2oNDFH_->Fill(vtx_chi2norm, wfac);
-      vertexChi2ProbH_->Fill(vtx_chi2prob, wfac);
-      
-      if (beamSpot.isValid()) {
+      if (!vertex.isFake() && vertex.ndof()>=4) {
+        ++nGoodVertices;
 
-        reco::Vertex beamspotvertex((*beamSpot).position(), (*beamSpot).covariance3D());
-
-        double deltaX = vtx_x - beamspotvertex.x();
-        double deltaY = vtx_y - beamspotvertex.y();
-
-        double vtx_dxy = TMath::Sqrt(deltaX * deltaX + deltaY * deltaY);  // vertex transverse distance from beamspot position
-        double vtx_dxyError = TMath::Sqrt(
-          (deltaX*deltaX*vertex.xError()*vertex.xError()) +
-          (deltaY*deltaY*vertex.yError()*vertex.yError()) +
-          (2*deltaX*deltaY*vertex.covariance(0,1))) / vtx_dxy;
-
-        double vtx_dz = vtx_z - beamspotvertex.z();
-        double vtx_dzError = vertex.zError();
+        vertexChi2H_->Fill(vtx_chi2, wfac);
+        vertexChi2oNDFH_->Fill(vtx_chi2norm, wfac);
+        vertexChi2ProbH_->Fill(vtx_chi2prob, wfac);
         
-        vertexXposH_->Fill(vtx_x, wfac);
-        vertexYposH_->Fill(vtx_y, wfac);
-        vertexZposH_->Fill(vtx_z, wfac);
-        vertexXYposBSH_->Fill(vtx_dxy, wfac);
-        vertexXYposerrBSH_->Fill(vtx_dxyError, wfac);
-        vertexZposBSH_->Fill(vtx_dz, wfac);
-        vertexZposerrBSH_->Fill(vtx_dzError, wfac);
-      }
-      else {
-        edm::LogError("StandaloneTrackMonitor") << "Beamspot for input tag: " << bsTag_ << " not found!!";
+        if (beamSpot.isValid()) {
+
+          reco::Vertex beamspotvertex((*beamSpot).position(), (*beamSpot).covariance3D());
+
+          double deltaX = vtx_x - beamspotvertex.x();
+          double deltaY = vtx_y - beamspotvertex.y();
+
+          double vtx_dxy = TMath::Sqrt(deltaX * deltaX + deltaY * deltaY);  // vertex transverse distance from beamspot position
+          double vtx_dxyError = TMath::Sqrt(
+            (deltaX*deltaX*vertex.xError()*vertex.xError()) +
+            (deltaY*deltaY*vertex.yError()*vertex.yError()) +
+            (2*deltaX*deltaY*vertex.covariance(0,1))) / vtx_dxy;
+
+          double vtx_dz = vtx_z - beamspotvertex.z();
+          double vtx_dzError = vertex.zError();
+          
+          vertexXposH_->Fill(vtx_x, wfac);
+          vertexYposH_->Fill(vtx_y, wfac);
+          vertexZposH_->Fill(vtx_z, wfac);
+          vertexXYposBSH_->Fill(vtx_dxy, wfac);
+          vertexXYposerrBSH_->Fill(vtx_dxyError, wfac);
+          vertexZposBSH_->Fill(vtx_dz, wfac);
+          vertexZposerrBSH_->Fill(vtx_dzError, wfac);
+
+          vertexDxybsVsLumiRunH_->Fill(run, vtx_dxy)
+
+        }
+        else {
+          edm::LogError("StandaloneTrackMonitor") << "Beamspot for input tag: " << bsTag_ << " not found!!";
+        }
       }
     }
   }
