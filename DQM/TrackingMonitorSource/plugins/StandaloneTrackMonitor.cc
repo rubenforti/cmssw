@@ -256,6 +256,7 @@ private:
   MonitorElement* vertexChi2oNDFH_;
   MonitorElement* vertexChi2ProbH_;
   MonitorElement* vertexDxybsVsLumiRunH_;
+  MonitorElement* vertexDxybsVsLumiRunH2D_;
 
   MonitorElement* nPixBarrelH_;
   MonitorElement* nPixEndcapH_;
@@ -559,6 +560,7 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
   vertexChi2oNDFH_ = nullptr;
   vertexChi2ProbH_ = nullptr;
   vertexDxybsVsLumiRunH_ = nullptr;
+  vertexDxybsVsLumiRunH2D_ = nullptr;
 
   nPixBarrelH_ = nullptr;
   nPixEndcapH_ = nullptr;
@@ -906,7 +908,16 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                                LumiRunHistoPar_.getParameter<double>("Xmax"),
                                                0.0,
                                                0.25,
-                                               "g");
+                                               "");
+
+    vertexDxybsVsLumiRunH2D_ = ibook.book2D("vertexDxybsVsLumiRun2D",
+                                            "vertex dxy wrt BS Vs Luminosity Run",
+                                            LumiRunHistoPar_.getParameter<int32_t>("Xbins"),
+                                            LumiRunHistoPar_.getParameter<double>("Xmin"),
+                                            LumiRunHistoPar_.getParameter<double>("Xmax"),
+                                            100,
+                                            0.0,
+                                            0.25);
 
 
     nMissingInnerHitBH_ = ibook.book1DD("nMissingInnerHitB", "No. missing inner hit per Track in Barrel", 6, -0.5, 5.5);
@@ -2090,7 +2101,8 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
           vertexZposBSH_->Fill(vtx_dz, wfac);
           vertexZposerrBSH_->Fill(vtx_dzError, wfac);
 
-          vertexDxybsVsLumiRunH_->Fill(run, vtx_dxy);
+          vertexDxybsVsLumiRunH_->Fill(run, vtx_dxy, wfac);
+          vertexDxybsVsLumiRunH2D_->Fill(run, vtx_dxy, wfac);
 
         }
         else {
