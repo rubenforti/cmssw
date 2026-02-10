@@ -2101,7 +2101,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
           vertexZposBSH_->Fill(vtx_dz, wfac);
           vertexZposerrBSH_->Fill(vtx_dzError, wfac);
 
-          vertexDxybsVsLumiRunH_->Fill(run, vtx_dxy, wfac);
+          vertexDxybsVsLumiRunH_->Fill(run, vtx_dxy);
           vertexDxybsVsLumiRunH2D_->Fill(run, vtx_dxy, wfac);
 
         }
