@@ -264,6 +264,8 @@ private:
 
   MonitorElement* vertexSelXYposBSH_;
   MonitorElement* vertexSelDxybsVsLumiRunH_;
+  MonitorElement* vertexSelZposBSH_;
+  MonitorElement* vertexSelDzbsVsLumiRunH_;
 
   MonitorElement* nPixBarrelH_;
   MonitorElement* nPixEndcapH_;
@@ -405,6 +407,8 @@ private:
 
   MonitorElement* commonVertexXYposBSH_;
   MonitorElement* commonVertexDxybsVsLumiRunH_;
+  MonitorElement* commonVertexZposBSH_;
+  MonitorElement* commonVertexDzbsVsLumiRunH_;
 
   std::vector<int> lumivec1;
   std::vector<int> lumivec2;
@@ -580,6 +584,8 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
 
   vertexSelXYposBSH_ = nullptr;
   vertexSelDxybsVsLumiRunH_ = nullptr;
+  vertexSelZposBSH_ = nullptr;
+  vertexSelDzbsVsLumiRunH_ = nullptr;
 
   nPixBarrelH_ = nullptr;
   nPixEndcapH_ = nullptr;
@@ -693,6 +699,8 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
 
   commonVertexXYposBSH_ = nullptr;
   commonVertexDxybsVsLumiRunH_ = nullptr;
+  commonVertexZposBSH_ = nullptr;
+  commonVertexDzbsVsLumiRunH_ = nullptr;
 
   // Read pileup weight factors
 
@@ -963,6 +971,17 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                                   LumiRunHistoPar_.getParameter<double>("Xmax"),
                                                   0.0, 0.25, "");
 
+    vertexSelZposBSH_ = ibook.book1DD("vertexSelZposBS", 
+                                      "Selected vertex Z position w.r.t beam spot", 
+                                      100, -20.0, 20.0);
+
+    vertexSelDzbsVsLumiRunH_ = ibook.bookProfile("vertexSelDzbsVsLumiRun",
+                                                 "Selected vertex dz wrt BS Vs Luminosity Run",
+                                                 LumiRunHistoPar_.getParameter<int32_t>("Xbins"),
+                                                 LumiRunHistoPar_.getParameter<double>("Xmin"),
+                                                 LumiRunHistoPar_.getParameter<double>("Xmax"),
+                                                 -20.0, 20.0, "");
+
     nMissingInnerHitBH_ = ibook.book1DD("nMissingInnerHitB", 
                                         "No. missing inner hit per Track in Barrel", 
                                         6, -0.5, 5.5);
@@ -1015,6 +1034,17 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                                      LumiRunHistoPar_.getParameter<double>("Xmin"),
                                                      LumiRunHistoPar_.getParameter<double>("Xmax"),
                                                      0.0, 0.25, "");
+    
+    commonVertexZposBSH_ = ibook.book1DD("commonVertexZposBS", 
+                                         "Di-track common vertex Z position w.r.t beam spot", 
+                                         100, -20.0, 20.0);
+
+    commonVertexDzbsVsLumiRunH_ = ibook.bookProfile("commonVertexDzbsVsLumiRun",
+                                                    "Di-track common vertex dz wrt BS Vs Luminosity Run",
+                                                    LumiRunHistoPar_.getParameter<int32_t>("Xbins"),
+                                                    LumiRunHistoPar_.getParameter<double>("Xmin"),
+                                                    LumiRunHistoPar_.getParameter<double>("Xmax"),
+                                                    -20.0, 20.0, "");
 
   }
 
@@ -2232,6 +2262,8 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
             const double vSel_dxy = sqrt(vSel_dx*vSel_dx + vSel_dy*vSel_dy);
             vertexSelXYposBSH_->Fill(vSel_dxy, wfac);
             vertexSelDxybsVsLumiRunH_->Fill(run, vSel_dxy);
+            vertexSelZposBSH_->Fill(vSel_dz, wfac);
+            vertexSelDzbsVsLumiRunH_->Fill(run, vSel_dz);
 
             const double vCommon_dx = myVertexPos.x() - beamSpot->x0();
             const double vCommon_dy = myVertexPos.y() - beamSpot->y0();
@@ -2239,6 +2271,8 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
             const double vCommon_dxy = sqrt(vCommon_dx*vCommon_dx + vCommon_dy*vCommon_dy);
             commonVertexXYposBSH_->Fill(vCommon_dxy, wfac);
             commonVertexDxybsVsLumiRunH_->Fill(run, vCommon_dxy);
+            commonVertexZposBSH_->Fill(vCommon_dz, wfac);
+            commonVertexDzbsVsLumiRunH_->Fill(run, vCommon_dz)
 
           }
         }
