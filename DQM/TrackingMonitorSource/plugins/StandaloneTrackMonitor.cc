@@ -2272,7 +2272,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
             commonVertexXYposBSH_->Fill(vCommon_dxy, wfac);
             commonVertexDxybsVsLumiRunH_->Fill(run, vCommon_dxy);
             commonVertexZposBSH_->Fill(vCommon_dz, wfac);
-            commonVertexDzbsVsLumiRunH_->Fill(run, vCommon_dz)
+            commonVertexDzbsVsLumiRunH_->Fill(run, vCommon_dz);
 
           }
         }
